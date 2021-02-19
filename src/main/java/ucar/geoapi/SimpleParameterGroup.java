@@ -14,10 +14,12 @@ import java.util.Collections;
 import java.util.Objects;
 
 import org.opengis.util.GenericName;
+import org.opengis.util.InternationalString;
 import org.opengis.parameter.GeneralParameterDescriptor;
 import org.opengis.parameter.GeneralParameterValue;
 import org.opengis.parameter.ParameterDescriptor;
 import org.opengis.parameter.ParameterDescriptorGroup;
+import org.opengis.parameter.ParameterDirection;
 import org.opengis.parameter.ParameterValue;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.parameter.ParameterNotFoundException;
@@ -100,6 +102,22 @@ final class SimpleParameterGroup extends NetcdfIdentifiedObject
     @Override
     public ParameterDescriptorGroup getDescriptor() {
         return this;
+    }
+
+    /**
+     * Returns {@code null}, since this simple class does not provide parameters description.
+     */
+    @Override
+    public InternationalString getDescription() {
+        return null;
+    }
+
+    /**
+     * Returns {@code this}, since this simple class is used only as input parameters.
+     */
+    @Override
+    public ParameterDirection getDirection() {
+        return ParameterDirection.IN;
     }
 
     /**
@@ -191,23 +209,6 @@ final class SimpleParameterGroup extends NetcdfIdentifiedObject
             param[i] = parameters.get(i).createValue();
         }
         return new SimpleParameterGroup(name, param);
-    }
-
-    /**
-     * Returns 1 since this parameter group is assumed mandatory.
-     */
-    @Override
-    public int getMinimumOccurs() {
-        return 1;
-    }
-
-    /**
-     * The maximum number of times that values for this parameter group can be included.
-     * The default value is 1. A value greater than 1 means a repeatable parameter.
-     */
-    @Override
-    public int getMaximumOccurs() {
-        return 1;
     }
 
     /**

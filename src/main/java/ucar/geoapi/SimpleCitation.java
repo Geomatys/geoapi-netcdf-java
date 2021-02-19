@@ -8,15 +8,8 @@ package ucar.geoapi;
 
 import java.util.Locale;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
 import org.opengis.metadata.Identifier;
 import org.opengis.metadata.citation.Citation;
-import org.opengis.metadata.citation.CitationDate;
-import org.opengis.metadata.citation.PresentationForm;
-import org.opengis.metadata.citation.ResponsibleParty;
-import org.opengis.metadata.citation.Series;
 import org.opengis.util.InternationalString;
 import org.opengis.util.GenericName;
 import org.opengis.util.NameSpace;
@@ -57,6 +50,13 @@ final class SimpleCitation implements Citation, NameSpace, InternationalString, 
      * The EPSG authority citation, also used as a namespace for aliases.
      */
     static final SimpleCitation EPSG = new SimpleCitation("EPSG");
+
+    /**
+     * The ISO 19115 standard.
+     */
+    static final SimpleCitation ISO_19115 = new SimpleCitation(
+            "ISO 19115-2 Geographic Information - Metadata Part 2 Extensions for imagery and gridded data",
+            new SimpleCitation("ISO 19115-2:2009(E)"));
 
     /**
      * The citation title to be returned by {@link #getTitle()}.
@@ -113,60 +113,5 @@ final class SimpleCitation implements Citation, NameSpace, InternationalString, 
     @Override public int     hashCode()                            {return title.hashCode() ^ (int) serialVersionUID;}
     @Override public boolean equals(final Object object) {
         return (object instanceof SimpleCitation) && title.equals(((SimpleCitation) object).title);
-    }
-
-    /** Not yet implemented. */
-    @Override public Collection<? extends InternationalString> getAlternateTitles() {
-        return Collections.emptyList();
-    }
-
-    /** Not yet implemented. */
-    @Override public Collection<? extends CitationDate> getDates() {
-        return Collections.emptyList();
-    }
-
-    /** Not yet implemented. */
-    @Override public Date getEditionDate() {
-        return null;
-    }
-
-    /** Not yet implemented. */
-    @Override public Collection<? extends Identifier> getIdentifiers() {
-        return Collections.emptyList();
-    }
-
-    /** Not yet implemented. */
-    @Override public Collection<? extends ResponsibleParty> getCitedResponsibleParties() {
-        return Collections.emptyList();
-    }
-
-    /** Not yet implemented. */
-    @Override public Collection<PresentationForm> getPresentationForms() {
-        return Collections.emptyList();
-    }
-
-    /** Not yet implemented. */
-    @Override public Series getSeries() {
-        return null;
-    }
-
-    /** Not yet implemented. */
-    @Override public InternationalString getOtherCitationDetails() {
-        return null;
-    }
-
-    /** Not yet implemented. */
-    @Override public InternationalString getCollectiveTitle() {
-        return null;
-    }
-
-    /** Not yet implemented. */
-    @Override public String getISBN() {
-        return null;
-    }
-
-    /** Not yet implemented. */
-    @Override public String getISSN() {
-        return null;
     }
 }

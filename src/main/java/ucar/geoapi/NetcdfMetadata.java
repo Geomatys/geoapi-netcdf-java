@@ -9,13 +9,14 @@ package ucar.geoapi;
 import java.io.File;
 import java.util.Date;
 import java.util.Locale;
+import java.util.EnumSet;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Objects;
+import java.util.Map;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Attribute;
 import ucar.nc2.time.Calendar;
@@ -23,19 +24,11 @@ import ucar.nc2.time.CalendarDateFormatter;
 import ucar.nc2.constants.ACDD;
 
 import org.opengis.metadata.*;
-import org.opengis.metadata.acquisition.AcquisitionInformation;
 import org.opengis.metadata.extent.*;
 import org.opengis.metadata.spatial.*;
 import org.opengis.metadata.citation.*;
-import org.opengis.metadata.constraint.Constraints;
-import org.opengis.metadata.content.ContentInformation;
-import org.opengis.metadata.distribution.Distribution;
-import org.opengis.metadata.distribution.Format;
 import org.opengis.metadata.maintenance.*;
 import org.opengis.metadata.identification.*;
-import org.opengis.metadata.quality.DataQuality;
-import org.opengis.referencing.ReferenceIdentifier;
-import org.opengis.referencing.ReferenceSystem;
 import org.opengis.util.InternationalString;
 
 
@@ -99,7 +92,7 @@ import org.opengis.util.InternationalString;
  *
  * @see <a href="http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/metadata/DataDiscoveryAttConvention.html">NetCDF Attribute Convention for Dataset Discovery</a>
  */
-final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentification, ReferenceIdentifier, Citation, CitationDate,
+final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentification, Identifier, Citation, CitationDate,
         OnlineResource, Address, Extent, GeographicBoundingBox     // Do not implement Party because can be Individual or Organisation.
 {
     /**
@@ -299,24 +292,12 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
     }
 
     /**
-     * Returns the version of the code.
-     *
-     * @return the code version, or {@code null} if none.
-     *
-     * @hidden
-     */
-    @Override
-    public String getVersion() {
-        return null;
-    }
-
-    /**
      * Returns the name of the resource, as the filename without path and suffix.
      *
      * @return the name of the resource, or {@code null} if none.
      */
     @Override
-    public String getName() {
+    public InternationalString getName() {
         String name = file.getLocation();
         if (name == null) {
             return null;
@@ -329,7 +310,7 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
         } else {
             name = new File(name.substring(0, end)).getName();
         }
-        return name.replace('_', ' ');
+        return new SimpleCitation(name.replace('_', ' '));
     }
 
     /**
@@ -375,7 +356,7 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
     public Collection<TopicCategory> getTopicCategories() {
         final String value = getUpperCase("topic_category");
         if (value == null) return Collections.emptySet();
-        final Set<TopicCategory> categories = new HashSet<>();
+        final EnumSet<TopicCategory> categories = EnumSet.noneOf(TopicCategory.class);
         for (final String element : value.split(",")) {
             categories.add(TopicCategory.valueOf(element.replace(' ', '_').trim()));
         }
@@ -402,10 +383,10 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
      * Returns the netCDF {@code "acknowledgment"} attribute value, or an empty set if none.
      */
     @Override
-    public Collection<String> getCredits() {
-        String value = getString("acknowledgment");
+    public Collection<InternationalString> getCredits() {
+        InternationalString value = getInternationalString("acknowledgment");
         if (value == null) {
-            value = getString(ACDD.acknowledgement);
+            value = getInternationalString(ACDD.acknowledgement);
         }
         return singleton(value);
     }
@@ -422,8 +403,19 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
      * This is the time when metadata have been created (not necessarily the time when data have been collected).
      */
     @Override
-    public Date getDateStamp() {
-        return getDate("metadata_creation");
+    public Collection<? extends CitationDate> getDateInfo() {
+        if (hasDate(false)) {
+            return Collections.singleton(new CitationDate() {
+                @Override public Date getDate() {
+                    return NetcdfMetadata.this.getDate("metadata_creation");
+                }
+                @Override public DateType getDateType() {
+                    return DateType.CREATION;
+                }
+            });
+        } else {
+            return Collections.emptySet();
+        }
     }
 
     /**
@@ -497,6 +489,14 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
     }
 
     /**
+     * Encapsulates the netCDF {@linkplain NetcdfFile#getLocation() file location}.
+     */
+    @Override
+    public Collection<? extends OnlineResource> getOnlineResources() {
+        return self(file.getLocation() != null);
+    }
+
+    /**
      * Returns the netCDF {@linkplain NetcdfFile#getLocation() file location}, or {@code null} if none.
      *
      * @return the file path, or {@code null} if none.
@@ -519,7 +519,7 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
      */
     @Override
     public OnLineFunction getFunction() {
-        return OnLineFunction.valueOf("FILE_ACCESS");
+        return OnLineFunction.FILE_ACCESS;
     }
 
     /**
@@ -528,6 +528,25 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
     @Override
     public InternationalString getSupplementalInformation() {
         return getInternationalString(ACDD.comment);
+    }
+
+    /**
+     * Defaults to {@code "ISO 19115-2 Geographic Information - Metadata Part 2 Extensions for imagery and gridded data"}
+     * with {@code "ISO 19115-2:2009(E)"} edition.
+     */
+    @Override
+    public Collection<? extends Citation> getMetadataStandards() {
+        return Collections.singleton(SimpleCitation.ISO_19115);
+    }
+
+    /**
+     * Encapsulates {@link ScopeCode#DATASET}.
+     */
+    @Override
+    public Collection<? extends MetadataScope> getMetadataScopes() {
+        return Collections.singleton(new MetadataScope() {
+            @Override public ScopeCode getResourceScope() {return ScopeCode.DATASET;}
+        });
     }
 
 
@@ -575,7 +594,7 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
      * Encapsulates the role, name, contact and position information for individuals or organisations.
      */
     @Override
-    public Collection<? extends ResponsibleParty> getCitedResponsibleParties() {
+    public Collection<? extends Responsibility> getCitedResponsibleParties() {
         return Collections.singleton(new Creator());
     }
 
@@ -593,13 +612,20 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
      *   <li>{@link Responsibility#getExtents()} not the same than {@link DataIdentification#getExtents()}.</li>
      * </ul>
      */
-    private final class Creator implements ResponsibleParty, Contact {
+    private final class Creator implements Responsibility, Individual, Contact {
         /**
          * Returns email address at which the individual may be contacted.
          */
         @Override
-        public Address getAddress() {
-            return hasAttribute(ACDD.creator_email) ? NetcdfMetadata.this : null;
+        public Collection<? extends Address> getAddresses() {
+            return self(hasAttribute(ACDD.creator_email));
+        }
+
+        /**
+         * Returns a collection containing {@code this} if the given attribute is presents, or an empty set otherwise.
+         */
+        private Collection<Creator> ifAttributePresents(final String name) {
+            return hasAttribute(name) ? Collections.<Creator>singleton(this) : Collections.<Creator>emptySet();
         }
 
         /**
@@ -611,36 +637,45 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
             return Role.ORIGINATOR;
         }
 
+        /**
+         * Encapsulates the {@linkplain #getName() creator} name and email address.
+         */
         @Override
-        public InternationalString getPositionName() {
-            return null;
-        }
-
-        @Override
-        public InternationalString getOrganisationName() {
-            return getInternationalString("institution");
+        public Collection<? extends Party> getParties() {
+            final Party party;
+            if (hasAttribute("institution")) {
+                party = new Organisation() {
+                    @Override public InternationalString              getName()        {return getInternationalString("institution");}
+                    @Override public Collection<? extends Individual> getIndividual()  {return ifAttributePresents(ACDD.creator_name);}
+                    @Override public Collection<? extends Contact>    getContactInfo() {
+                        if (hasAttribute(ACDD.creator_name)) {
+                            return Collections.emptySet();          // Email address to be provided with the individual instead.
+                        } else {
+                            return Creator.this.getContactInfo();
+                        }
+                    }
+                };
+            } else {
+                party = this;                           // Individual only.
+            }
+            return Collections.singleton(party);
         }
 
         /**
          * Returns the netCDF {@value ACDD#creator_name} attribute value, or {@code null} if none.
          */
         @Override
-        public String getIndividualName() {
-            return getString(ACDD.creator_name);
+        public InternationalString getName() {
+            return getInternationalString(ACDD.creator_name);
         }
 
         /**
          * Encapsulates the creator {@linkplain #getElectronicMailAddresses() email address}.
          */
         @Override
-        public Contact getContactInfo() {
-            return hasAttribute(ACDD.creator_email) ? this : null;
+        public Collection<? extends Contact> getContactInfo() {
+            return ifAttributePresents(ACDD.creator_email);
         }
-
-        @Override public Telephone           getPhone()               {return null;}
-        @Override public OnlineResource      getOnlineResource()      {return null;}
-        @Override public InternationalString getHoursOfService()      {return null;}
-        @Override public InternationalString getContactInstructions() {return null;}
     }
 
     /**
@@ -651,7 +686,7 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
      * However the attributes in netCDF files usually don't make this distinction.
      */
     @Override
-    public Collection<? extends ResponsibleParty> getContacts() {
+    public Collection<? extends Responsibility> getContacts() {
         return getPointOfContacts();
     }
 
@@ -679,59 +714,10 @@ final class NetcdfMetadata extends Wrapper implements Metadata, DataIdentificati
     // │    Non-implemented methods                                                              │
     // └─────────────────────────────────────────────────────────────────────────────────────────┘
 
-    /** @hidden */ @Override public InternationalString getDescription() {return null;}
-    /** @hidden */ @Override public String getFileIdentifier() {return null;}
-    /** @hidden */ @Override public Locale getLanguage() {return null;}
-    /** @hidden */ @Override public CharacterSet getCharacterSet() {return null;}
-    /** @hidden */ @Override public String getParentIdentifier() {return null;}
-    /** @hidden */ @Override public Collection<ScopeCode> getHierarchyLevels() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<String> getHierarchyLevelNames() {return Collections.emptyList();}
-    /** @hidden */ @Override public String getMetadataStandardName() {return "ISO 19115-2:2009(E)";}
-    /** @hidden */ @Override public String getMetadataStandardVersion() {return null;}
-    /** @hidden */ @Override public String getDataSetUri() {return null;}
-    /** @hidden */ @Override public Collection<Locale> getLocales() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends SpatialRepresentation> getSpatialRepresentationInfo() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends ReferenceSystem> getReferenceSystemInfo() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends MetadataExtensionInformation> getMetadataExtensionInfo() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends ContentInformation> getContentInfo() {return Collections.emptyList();}
-    /** @hidden */ @Override public Distribution getDistributionInfo() {return null;}
-    /** @hidden */ @Override public Collection<? extends DataQuality> getDataQualityInfo() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends PortrayalCatalogueReference> getPortrayalCatalogueInfo() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends Constraints> getMetadataConstraints() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends ApplicationSchemaInformation> getApplicationSchemaInfo() {return Collections.emptyList();}
-    /** @hidden */ @Override public MaintenanceInformation getMetadataMaintenance() {return null;}
-    /** @hidden */ @Override public Collection<? extends AcquisitionInformation> getAcquisitionInformation() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends Resolution> getSpatialResolutions() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<Locale> getLanguages() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<CharacterSet> getCharacterSets() {return Collections.emptyList();}
-    /** @hidden */ @Override public InternationalString getEnvironmentDescription() {return null;}
-    /** @hidden */ @Override public Collection<Progress> getStatus() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends ResponsibleParty> getPointOfContacts() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends MaintenanceInformation> getResourceMaintenances() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends BrowseGraphic> getGraphicOverviews() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends Format> getResourceFormats() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends Keywords> getDescriptiveKeywords() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends Usage> getResourceSpecificUsages() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends Constraints> getResourceConstraints() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends AggregateInformation> getAggregationInfo() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends InternationalString> getAlternateTitles() {return Collections.emptyList();}
-    /** @hidden */ @Override public InternationalString getEdition() {return null;}
-    /** @hidden */ @Override public Date getEditionDate() {return null;}
-    /** @hidden */ @Override public Collection<PresentationForm> getPresentationForms() {return Collections.emptyList();}
-    /** @hidden */ @Override public Series getSeries() {return null;}
-    /** @hidden */ @Override public InternationalString getOtherCitationDetails() {return null;}
-    /** @hidden */ @Override public InternationalString getCollectiveTitle() {return null;}
-    /** @hidden */ @Override public String getISBN() {return null;}
-    /** @hidden */ @Override public String getISSN() {return null;}
-    /** @hidden */ @Override public String getProtocol() {return null;}
-    /** @hidden */ @Override public String getApplicationProfile() {return null;}
-    /** @hidden */ @Override public Collection<String> getDeliveryPoints() {return Collections.emptyList();}
-    /** @hidden */ @Override public InternationalString getCity() {return null;}
-    /** @hidden */ @Override public InternationalString getAdministrativeArea() {return null;}
-    /** @hidden */ @Override public String getPostalCode() {return null;}
-    /** @hidden */ @Override public InternationalString getCountry() {return null;}
-    /** @hidden */ @Override public Collection<? extends TemporalExtent> getTemporalElements() {return Collections.emptyList();}
-    /** @hidden */ @Override public Collection<? extends VerticalExtent> getVerticalElements() {return Collections.emptyList();}
+    /** @hidden */ @Override public InternationalString getDescription()        {return null;}
+    /** @hidden */ @Override public Map<Locale,Charset> getLocalesAndCharsets() {return Collections.emptyMap();}
+
+
 
 
     // ┌─────────────────────────────────────────────────────────────────────────────────────────┐

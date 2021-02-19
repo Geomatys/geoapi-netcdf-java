@@ -14,9 +14,6 @@ import java.awt.geom.Rectangle2D;
 import org.opengis.metadata.extent.Extent;
 import org.opengis.metadata.extent.GeographicExtent;
 import org.opengis.metadata.extent.GeographicBoundingBox;
-import org.opengis.metadata.extent.TemporalExtent;
-import org.opengis.metadata.extent.VerticalExtent;
-import org.opengis.util.InternationalString;
 
 
 /**
@@ -243,20 +240,5 @@ final class SimpleGeographicBoundingBox implements GeographicBoundingBox, Extent
                 "east="  + eastBoundLongitude + ", " +
                 "south=" + southBoundLatitude + ", " +
                 "north=" + northBoundLatitude + ']';
-    }
-
-    /** Not yet implemented. */
-    @Override public InternationalString getDescription() {
-        return null;
-    }
-
-    /** Not yet implemented. */
-    @Override public Collection<? extends TemporalExtent> getTemporalElements() {
-        return Collections.emptyList();
-    }
-
-    /** Not yet implemented. */
-    @Override public Collection<? extends VerticalExtent> getVerticalElements() {
-        return Collections.emptyList();
     }
 }

@@ -7,20 +7,15 @@
 package ucar.geoapi;
 
 import java.util.Date;
-import java.util.Set;
-import java.util.Collection;
-import java.util.Collections;
 import java.io.Serializable;
 
 import ucar.nc2.VariableSimpleIF;
 
-import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
 import org.opengis.metadata.Identifier;
 import org.opengis.metadata.extent.Extent;
 import org.opengis.metadata.citation.Citation;
 import org.opengis.referencing.IdentifiedObject;
-import org.opengis.referencing.ReferenceIdentifier;
 
 
 /**
@@ -37,7 +32,7 @@ import org.opengis.referencing.ReferenceIdentifier;
  *
  * @author  Martin Desruisseaux (Geomatys)
  */
-abstract class NetcdfIdentifiedObject extends Wrapper implements IdentifiedObject, ReferenceIdentifier, Serializable {
+abstract class NetcdfIdentifiedObject extends Wrapper implements IdentifiedObject, Identifier, Serializable {
     /**
      * For cross-version compatibility.
      */
@@ -89,29 +84,8 @@ abstract class NetcdfIdentifiedObject extends Wrapper implements IdentifiedObjec
      * the {@link #getCode()} method.
      */
     @Override
-    public ReferenceIdentifier getName() {
+    public Identifier getName() {
         return this;
-    }
-
-    /**
-     * Returns identifiers which references elsewhere the object's defining information.
-     * Alternatively an identifier by which this object can be referenced.
-     *
-     * @return this object identifiers, or an empty collection if there is none.
-     */
-    @Override
-    public Set<ReferenceIdentifier> getIdentifiers() {
-        return Collections.emptySet();
-    }
-
-    /**
-     * Returns alternative names by which this object is identified.
-     *
-     * @return alternative names and abbreviations, or an empty collection if there is none.
-     */
-    @Override
-    public Collection<GenericName> getAlias() {
-        return Collections.emptyList();
     }
 
     /**
@@ -170,16 +144,6 @@ abstract class NetcdfIdentifiedObject extends Wrapper implements IdentifiedObjec
      * @return the datum realization epoch, or {@code null} if not available.
      */
     public Date getRealizationEpoch() {
-        return null;
-    }
-
-    /**
-     * Returns comments on or information about this object, including data source information.
-     *
-     * @return the remarks, or {@code null} if none.
-     */
-    @Override
-    public InternationalString getRemarks() {
         return null;
     }
 

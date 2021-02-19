@@ -22,8 +22,6 @@ import org.opengis.parameter.GeneralParameterDescriptor;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.OperationMethod;
 import org.opengis.referencing.operation.MathTransformFactory;
-import org.opengis.test.ValidatorContainer;
-import org.opengis.test.Validators;
 import org.opengis.test.TestCase;
 
 import org.junit.Test;
@@ -36,12 +34,7 @@ import static org.opengis.test.Assert.*;
  *
  * @author  Martin Desruisseaux (Geomatys)
  */
-public final strictfp class NetcdfTransformFactoryTest extends TestCase {
-    /**
-     * The set of {@link Validator} instances to use for verifying objects conformance.
-     */
-    private final ValidatorContainer validators;
-
+public strictfp class NetcdfTransformFactoryTest extends TestCase {
     /**
      * The set of projection implementations to test.
      * The default constructor initializes this array to
@@ -61,21 +54,35 @@ public final strictfp class NetcdfTransformFactoryTest extends TestCase {
      * Subclasses can modify this array before a test is run if they need to test a
      * different set of projection implementations.
      */
-    private final Class<? extends Projection>[] projections;
+    private Class<? extends Projection>[] projections;
 
     /**
      * The factory to test. Subclasses can modify this field before a test
      * is run if they need to test a different factory implementation.
      */
-    private final MathTransformFactory factory;
+    private MathTransformFactory factory;
+
+    /**
+     * The default factory, created when first needed.
+     */
+    private static MathTransformFactory defaultFactory;
 
     /**
      * Creates a new test case for {@link NetcdfTransformFactory}.
      */
-    @SuppressWarnings({"unchecked","rawtypes"})
     public NetcdfTransformFactoryTest() {
-        validators = Validators.DEFAULT;
-        factory = NetcdfTransformFactory.getInstance();
+        this(getDefaultFactory());
+    }
+
+    /**
+     * Creates a new test case for the given factory.
+     *
+     * @param factory  the factory to test.
+     */
+    @SuppressWarnings({"unchecked","rawtypes"})
+    protected NetcdfTransformFactoryTest(final MathTransformFactory factory) {
+        super(factory);
+        this.factory = factory;
         projections = new Class[] {
             AlbersEqualArea.class,
             FlatEarth.class,
@@ -91,6 +98,16 @@ public final strictfp class NetcdfTransformFactoryTest extends TestCase {
             UtmProjection.class,
             VerticalPerspectiveView.class
         };
+    }
+
+    /**
+     * Returns the default factory to test.
+     */
+    static synchronized MathTransformFactory getDefaultFactory() {
+        if (defaultFactory == null) {
+            defaultFactory = NetcdfTransformFactory.getInstance();
+        }
+        return defaultFactory;
     }
 
     /**

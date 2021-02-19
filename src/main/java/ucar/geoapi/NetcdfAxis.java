@@ -18,7 +18,6 @@ import ucar.nc2.dataset.CoordinateAxis1D;
 import org.opengis.util.InternationalString;
 import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
-import org.opengis.referencing.cs.RangeMeaning;
 
 
 /**
@@ -153,17 +152,6 @@ final class NetcdfAxis extends NetcdfIdentifiedObject implements CoordinateSyste
     @Override
     public double getMaximumValue() {
         return axis.getMaxValue();
-    }
-
-    /**
-     * Returns the meaning of axis value range specified by the {@linkplain #getMinimumValue()
-     * minimum} and {@linkplain #getMaximumValue() maximum} values.
-     *
-     * @return the range meaning, or {@code null} in none.
-     */
-    @Override
-    public RangeMeaning getRangeMeaning() {
-        return null;
     }
 
     /**

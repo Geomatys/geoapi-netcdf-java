@@ -6,6 +6,7 @@
  */
 package ucar.geoapi;
 
+import java.net.URI;
 import java.util.Date;
 import java.io.IOException;
 import ucar.nc2.NetcdfFile;
@@ -13,10 +14,16 @@ import ucar.nc2.NetcdfFile;
 import org.opengis.metadata.Metadata;
 import org.opengis.metadata.citation.Role;
 import org.opengis.metadata.citation.DateType;
+import org.opengis.metadata.citation.Responsibility;
+import org.opengis.metadata.citation.OnLineFunction;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.metadata.spatial.SpatialRepresentationType;
 import org.opengis.metadata.identification.TopicCategory;
+import org.opengis.metadata.maintenance.ScopeCode;
+import org.opengis.test.metadata.MetadataBaseValidator;
 import org.opengis.test.Validators;
+import org.opengis.test.dataset.TestData;
+import org.opengis.test.dataset.ContentVerifier;
 
 import org.junit.Test;
 
@@ -93,16 +100,20 @@ public final strictfp class NetcdfMetadataTest extends IOTestCase {
             validator.validate(metadata);
             verifier.addMetadataToVerify(metadata);
             verifier.assertMetadataEquals(
+                "metadataScope[0].resourceScope",                                          ScopeCode.DATASET,
                 "identificationInfo[0].abstract",                                          "Global, two-dimensional model data",
                 "identificationInfo[0].purpose",                                           "GeoAPI conformance tests",
                 "identificationInfo[0].citation.title",                                    "Test data from Sea Surface Temperature Analysis Model",
                 "identificationInfo[0].citation.citedResponsibleParty[0].role",            Role.ORIGINATOR,
-                "identificationInfo[0].citation.citedResponsibleParty[0].individualName",  "NOAA/NWS/NCEP",
+                "identificationInfo[0].citation.citedResponsibleParty[0].party[0].name",   "NOAA/NWS/NCEP",
                 "identificationInfo[0].citation.date[0].date",                             new Date(1127347200000L),
                 "identificationInfo[0].citation.date[0].dateType",                         DateType.CREATION,
                 "identificationInfo[0].citation.identifier[0].code",                       "NCEP/SST/Global_5x2p5deg/SST_Global_5x2p5deg_20050922_0000.nc",
                 "identificationInfo[0].citation.identifier[0].codeSpace",                  "edu.ucar.unidata",
                 "identificationInfo[0].citation.identifier[0].authority.title",            "edu.ucar.unidata",
+                "identificationInfo[0].citation.onlineResource[0].name",                   "Cube2D geographic packed",
+                "identificationInfo[0].citation.onlineResource[0].linkage",                URI.create("Cube2D_geographic_packed.nc"),
+                "identificationInfo[0].citation.onlineResource[0].function",               OnLineFunction.FILE_ACCESS,
                 "identificationInfo[0].extent[0].geographicElement[0].extentTypeCode",     Boolean.TRUE,
                 "identificationInfo[0].extent[0].geographicElement[0].westBoundLongitude", -180.0,
                 "identificationInfo[0].extent[0].geographicElement[0].eastBoundLongitude",  180.0,
@@ -110,7 +121,8 @@ public final strictfp class NetcdfMetadataTest extends IOTestCase {
                 "identificationInfo[0].extent[0].geographicElement[0].northBoundLatitude",   90.0,
                 "identificationInfo[0].spatialRepresentationType[0]",                      SpatialRepresentationType.GRID,
                 "identificationInfo[0].supplementalInformation",                           "For testing purpose only.",
-                "metadataStandardName",                                                    "ISO 19115-2:2009(E)");
+                "metadataStandard[0].title",                                               "ISO 19115-2 Geographic Information - Metadata Part 2 Extensions for imagery and gridded data",
+                "metadataStandard[0].edition",                                             "ISO 19115-2:2009(E)");
         }
     }
 
@@ -121,20 +133,24 @@ public final strictfp class NetcdfMetadataTest extends IOTestCase {
      */
     @Test
     public void testCompound4D() throws IOException {
-        final String party = "identificationInfo[0].citation.citedResponsibleParty[0].";     // Shortcut.
+        final String individual = "identificationInfo[0].citation.citedResponsibleParty[0].party[0].individual[0].";     // Shortcut.
         final ContentVerifier verifier = new ContentVerifier();
         try (NetcdfFile file = open(TestData.NETCDF_4D_PROJECTED)) {
             metadata = wrap(file);
             validator.validate(metadata);
             verifier.addMetadataToVerify(metadata);
             verifier.assertMetadataEquals(
+                "metadataScope[0].resourceScope",                                          ScopeCode.DATASET,
                 "identificationInfo[0].abstract",                                          "Hourly, three-dimensional diagnosis of the icing environment.",
                 "identificationInfo[0].purpose",                                           "GeoAPI conformance tests",
                 "identificationInfo[0].citation.title",                                    "Test data from Current Icing Product (CIP)",
                 "identificationInfo[0].citation.citedResponsibleParty[0].role",            Role.ORIGINATOR,
-                party + "organisationName",                                                "UCAR",
-                party + "individualName",                                                  "John Doe",
-                party + "contactInfo.address.electronicMailAddress[0]",                    "john.doe@example.org",
+                "identificationInfo[0].citation.citedResponsibleParty[0].party[0].name",   "UCAR",
+                individual + "name",                                                       "John Doe",
+                individual + "contactInfo[0].address[0].electronicMailAddress[0]",         "john.doe@example.org",
+                "identificationInfo[0].citation.onlineResource[0].name",                   "Cube4D projected float",
+                "identificationInfo[0].citation.onlineResource[0].linkage",                URI.create("Cube4D_projected_float.nc"),
+                "identificationInfo[0].citation.onlineResource[0].function",               OnLineFunction.FILE_ACCESS,
                 "identificationInfo[0].extent[0].geographicElement[0].extentTypeCode",     Boolean.TRUE,
                 "identificationInfo[0].extent[0].geographicElement[0].westBoundLongitude", -107.75f,
                 "identificationInfo[0].extent[0].geographicElement[0].eastBoundLongitude", -56.66f,
@@ -142,7 +158,8 @@ public final strictfp class NetcdfMetadataTest extends IOTestCase {
                 "identificationInfo[0].extent[0].geographicElement[0].northBoundLatitude",  58.37f,
                 "identificationInfo[0].topicCategory[0]",                                   TopicCategory.CLIMATOLOGY_METEOROLOGY_ATMOSPHERE,
                 "identificationInfo[0].supplementalInformation",                           "For testing purpose only.",
-                "metadataStandardName",                                                    "ISO 19115-2:2009(E)");
+                "metadataStandard[0].title",                                               "ISO 19115-2 Geographic Information - Metadata Part 2 Extensions for imagery and gridded data",
+                "metadataStandard[0].edition",                                             "ISO 19115-2:2009(E)");
         }
     }
 }

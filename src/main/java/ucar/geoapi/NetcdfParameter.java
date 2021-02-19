@@ -11,14 +11,15 @@ import java.util.Collections;
 import java.util.Objects;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Set;
 import javax.measure.Unit;
 
 import ucar.unidata.util.Parameter;
 
 import org.opengis.util.GenericName;
+import org.opengis.util.InternationalString;
 import org.opengis.parameter.ParameterValue;
 import org.opengis.parameter.ParameterDescriptor;
+import org.opengis.parameter.ParameterDirection;
 import org.opengis.parameter.InvalidParameterTypeException;
 import org.opengis.parameter.InvalidParameterValueException;
 
@@ -185,6 +186,22 @@ class NetcdfParameter<T> extends NetcdfIdentifiedObject
     }
 
     /**
+     * Returns {@code null}, since this simple class does not provide parameter description.
+     */
+    @Override
+    public InternationalString getDescription() {
+        return null;
+    }
+
+    /**
+     * Returns {@code this}, since this simple class is used only as input parameter.
+     */
+    @Override
+    public ParameterDirection getDirection() {
+        return ParameterDirection.IN;
+    }
+
+    /**
      * Returns a new value for this descriptor.
      *
      * @return a new parameter value.
@@ -216,46 +233,6 @@ class NetcdfParameter<T> extends NetcdfIdentifiedObject
     }
 
     /**
-     * Returns the set of allowed values when these are restricted to some finite set or returns
-     * {@code null} otherwise. The returned set usually contains {@linkplain CodeList code list}
-     * or enumeration elements.
-     *
-     * @return a finite set of valid values (usually from a {@code CodeList}),
-     *         or {@code null} if it does not apply or if there is no restriction.
-     *
-     * @departure extension
-     *   This method is not part of ISO specification. It is provided as a complement of information.
-     */
-    @Override
-    public Set<T> getValidValues() {
-        return null;                    // Really null, not an empty collection, because we mean "no restriction".
-    }
-
-    /**
-     * Returns the minimum parameter value.
-     * If there is no minimum value, or if the minimum value is inappropriate for the
-     * {@linkplain #getValueClass() value class}, then this method returns {@code null}.
-     *
-     * @return the minimum parameter value (often an instance of {@link Double}), or {@code null}.
-     */
-    @Override
-    public Comparable<T> getMinimumValue() {
-        return null;
-    }
-
-    /**
-     * Returns the maximum parameter value.
-     * If there is no maximum value, or if the maximum value is inappropriate for the
-     * {@linkplain #getValueClass() value class}, then this method returns {@code null}.
-     *
-     * @return the maximum parameter value (often an instance of {@link Double}), or {@code null}.
-     */
-    @Override
-    public Comparable<T> getMaximumValue() {
-        return null;
-    }
-
-    /**
      * Returns the {@linkplain #getValue() current value} as the default value.
      * This is consistent with the {@link #createValue()} method, which creates
      * a copy of {@code NetcdfParameter} containing the same parameter value.
@@ -279,15 +256,6 @@ class NetcdfParameter<T> extends NetcdfIdentifiedObject
     @Override
     public int getMinimumOccurs() {
         return 0;
-    }
-
-    /**
-     * The maximum number of times that values for this parameter can be included.
-     * The default value is 1. A value greater than 1 means a repeatable parameter.
-     */
-    @Override
-    public int getMaximumOccurs() {
-        return 1;
     }
 
     /**

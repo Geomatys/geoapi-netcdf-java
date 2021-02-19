@@ -33,7 +33,6 @@ import org.opengis.referencing.cs.VerticalCS;
 import org.opengis.referencing.cs.TimeCS;
 import org.opengis.referencing.datum.TemporalDatum;
 import org.opengis.referencing.IdentifiedObject;
-import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.operation.Projection;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.test.referencing.OperationValidator;
@@ -41,6 +40,7 @@ import org.opengis.test.referencing.CRSValidator;
 import org.opengis.test.referencing.CSValidator;
 import org.opengis.test.ValidatorContainer;
 import org.opengis.test.Validators;
+import org.opengis.test.dataset.TestData;
 
 import org.junit.Test;
 
@@ -105,7 +105,7 @@ public final strictfp class NetcdfCRSTest extends IOTestCase {
      * to {@code false}, since netCDF axis names are non-standard.
      */
     public NetcdfCRSTest() {
-        final ValidatorContainer container = Validators.DEFAULT;
+        final ValidatorContainer container = Validators.DEFAULT.clone();
         validator = new CRSValidator(container);
         /*
          * OperationValidator has recursive call to CRSValidator,
@@ -115,6 +115,7 @@ public final strictfp class NetcdfCRSTest extends IOTestCase {
         container.crs = validator;
         container.cs = new CSValidator(container);
         container.cs.requireMandatoryAttributes = false;
+        validator.enforceStandardNames = false;
     }
 
     /**
@@ -164,7 +165,7 @@ public final strictfp class NetcdfCRSTest extends IOTestCase {
      * @param object    the identified object to verify.
      */
     private void assertNameEquals(final String expected, final IdentifiedObject object) {
-        final ReferenceIdentifier name = object.getName();
+        final Identifier name = object.getName();
         assertNotNull("IdentifiedObject.name", name);
         assertEquals("Code space", "netCDF", name.getCodeSpace());
         assertEquals("Code value", expected, name.getCode());
@@ -301,38 +302,5 @@ public final strictfp class NetcdfCRSTest extends IOTestCase {
             assertEquals("earth_radius",                          6371229.000, p.parameter("earth_radius").doubleValue(), EPS);
             assertArrayEquals("standard_parallel", new double[] {25.0, 25.05}, p.parameter("standard_parallel").doubleValueList(), EPS);
         }
-    }
-
-    /**
-     * Asserts that all axes in the given coordinate system are pointing toward the given
-     * directions, in the same order.
-     *
-     * @param message   header of the exception message in case of failure, or {@code null} if none.
-     * @param cs        the coordinate system to test.
-     * @param expected  the expected axis directions.
-     */
-    private static void assertAxisDirectionsEqual(String message,
-            final org.opengis.referencing.cs.CoordinateSystem cs, final AxisDirection... expected)
-    {
-        assertEquals(concat(message, "Wrong coordinate system dimension."), expected.length, cs.getDimension());
-        message = concat(message, "Wrong axis direction.");
-        for (int i=0; i<expected.length; i++) {
-            assertEquals(message, expected[i], cs.getAxis(i).getDirection());
-        }
-    }
-
-    /**
-     * Returns the concatenation of the given message with the given extension.
-     * This method returns the given extension if the message is null or empty.
-     *
-     * @param  message  the message, or {@code null}.
-     * @param  ext      the extension to append after the message.
-     * @return the concatenated string.
-     */
-    private static String concat(String message, final String ext) {
-        if (message == null || (message = message.trim()).isEmpty()) {
-            return ext;
-        }
-        return message + ' ' + ext;
     }
 }

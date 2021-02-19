@@ -14,11 +14,8 @@ import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.operation.SingleOperation;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.test.referencing.TransformTestCase;
-import org.opengis.test.ValidatorContainer;
-import org.opengis.test.Validators;
 
 import org.junit.Test;
-import org.opengis.referencing.operation.MathTransform;
 
 import static org.opengis.test.Assert.*;
 
@@ -31,11 +28,6 @@ import static org.opengis.test.Assert.*;
  * @author  Martin Desruisseaux (Geomatys)
  */
 public final strictfp class NetcdfProjectionTest extends TransformTestCase {
-    /**
-     * The set of {@link Validator} instances to use for verifying objects conformance.
-     */
-    private final ValidatorContainer validators;
-
     /**
      * The coordinate operation wrapping the netCDF projection. This field is initialized
      * to the value returned by {@link #wrap(Projection)} before a test is executed.
@@ -51,8 +43,9 @@ public final strictfp class NetcdfProjectionTest extends TransformTestCase {
      * set to {@code false} since the netCDF library does not implement projection derivatives.
      */
     public NetcdfProjectionTest() {
-        validators = Validators.DEFAULT;
+        super(NetcdfTransformFactoryTest.getDefaultFactory());
         tolerance = 1E-10;
+        isDerivativeSupported = false;
         /*
          * Our objects are not yet strictly ISO compliant, so be lenient...
          */
@@ -93,70 +86,6 @@ public final strictfp class NetcdfProjectionTest extends TransformTestCase {
                        new double[] {+180, +80}, // Maximal ordinate values to test.
                        new int[]    { 360, 160}, // Number of points to test.
                        new Random(216919106));
-    }
-
-    /**
-     * Copy of GeoAPI 3.1/4.0 method, to be removed after we upgraded
-     * the dependency from GeoAPI 3.0 to GeoAPI 3.1 or 4.0.
-     */
-    private float[] verifyInDomain(final double[] minOrdinates, final double[] maxOrdinates,
-            final int[] numOrdinates, final Random randomGenerator) throws TransformException
-    {
-        final MathTransform transform = this.transform;             // Protect from changes.
-        assertNotNull("TransformTestCase.transform shall be assigned a value.", transform);
-        final int dimension = transform.getSourceDimensions();
-        assertEquals("The minOrdinates array doesn't have the expected length.", dimension, minOrdinates.length);
-        assertEquals("The maxOrdinates array doesn't have the expected length.", dimension, maxOrdinates.length);
-        assertEquals("The numOrdinates array doesn't have the expected length.", dimension, numOrdinates.length);
-        int numPoints = 1;
-        for (int i=0; i<dimension; i++) {
-            numPoints *= numOrdinates[i];
-            assertTrue("Invalid numOrdinates value.", numPoints >= 0);
-        }
-        final float[] coordinates = new float[numPoints * dimension];
-        /*
-         * Initialize the coordinate values for each dimension, and shuffle
-         * the result if a random numbers generator has been specified.
-         */
-        int step = 1;
-        for (int dim=0; dim<dimension; dim++) {
-            final int    n     =  numOrdinates[dim];
-            final double delta = (maxOrdinates[dim] - minOrdinates[dim]) / n;
-            final double start =  minOrdinates[dim] + delta/2;
-            int ordinateIndex=0, count=0;
-            float ordinate = (float) start;
-            for (int i=dim; i<coordinates.length; i+=dimension) {
-                coordinates[i] = ordinate;
-                if (randomGenerator != null) {
-                    coordinates[i] += (randomGenerator.nextFloat() - 0.5f) * delta;
-                }
-                if (++count == step) {
-                    count = 0;
-                    if (++ordinateIndex == n) {
-                        ordinateIndex = 0;
-                    }
-                    ordinate = (float) (ordinateIndex*delta + start);
-                }
-            }
-            step *= numOrdinates[dim];
-        }
-        if (randomGenerator != null) {
-            final float[] buffer = new float[dimension];
-            for (int i=coordinates.length; (i -= dimension) >= 0;) {
-                final int t = randomGenerator.nextInt(numPoints) * dimension;
-                System.arraycopy(coordinates, t, buffer,      0, dimension);
-                System.arraycopy(coordinates, i, coordinates, t, dimension);
-                System.arraycopy(buffer,      0, coordinates, i, dimension);
-            }
-        }
-        /*
-         * Delegate to other methods defined in this class.
-         */
-        verifyConsistency(coordinates);
-        if (isInverseTransformSupported) {
-            verifyInverse(coordinates);
-        }
-        return coordinates;
     }
 
     /**

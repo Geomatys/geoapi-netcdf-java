@@ -318,14 +318,4 @@ public class NetcdfTransformFactory implements MathTransformFactory {
     public MathTransform createFromWKT(final String wkt) throws FactoryException {
         throw new FactoryException("Not supported yet.");
     }
-
-    /**
-     * Not yet implemented.
-     *
-     * @hidden
-     */
-    @Override
-    public MathTransform createFromXML(final String wkt) throws FactoryException {
-        throw new FactoryException("Not supported yet.");
-    }
 }

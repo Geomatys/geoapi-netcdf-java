@@ -15,7 +15,6 @@ import java.awt.Shape;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
-import java.util.Collection;
 
 import ucar.unidata.util.Parameter;
 import ucar.unidata.geoloc.LatLonRect;
@@ -29,7 +28,6 @@ import ucar.unidata.geoloc.projection.ProjectionAdapter;
 import org.opengis.metadata.extent.Extent;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
-import org.opengis.metadata.quality.PositionalAccuracy;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.operation.Matrix;
@@ -578,16 +576,6 @@ final class NetcdfProjection extends NetcdfIdentifiedObject
                     domain.getLatMin(), domain.getLatMax());
         }
         return null;
-    }
-
-    /** Not yet implemented. */
-    @Override public String getOperationVersion() {
-        return null;
-    }
-
-    /** Not yet implemented. */
-    @Override public Collection<PositionalAccuracy> getCoordinateOperationAccuracy() {
-        return Collections.emptyList();
     }
 
     /**

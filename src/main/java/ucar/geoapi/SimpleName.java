@@ -6,10 +6,8 @@
  */
 package ucar.geoapi;
 
-import java.io.Serializable;
-import java.util.Collections;
 import java.util.Objects;
-import java.util.List;
+import java.io.Serializable;
 
 import org.opengis.util.LocalName;
 import org.opengis.util.NameSpace;
@@ -51,40 +49,6 @@ final class SimpleName implements LocalName, Serializable {
     SimpleName(final NameSpace scope, final String name) {
         this.scope = scope;
         this.name  = name.trim();
-    }
-
-    /**
-     * Returns the number of levels specified by this name, which is always 1 for a local name.
-     *
-     * @return always 1 for a local name.
-     */
-    @Override
-    public int depth() {
-        return 1;
-    }
-
-    /**
-     * Returns a singleton containing only {@code this}.
-     */
-    @Override
-    public List<? extends LocalName> getParsedNames() {
-        return Collections.singletonList(this);
-    }
-
-    /**
-     * Returns {@code this} since this object is already a local name.
-     */
-    @Override
-    public LocalName head() {
-        return this;
-    }
-
-    /**
-     * Returns {@code this} since this object is already a local name.
-     */
-    @Override
-    public LocalName tip() {
-        return this;
     }
 
     /**

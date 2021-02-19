@@ -61,7 +61,7 @@
   </developers>
 
   <properties>
-    <geoapi.version>3.0.1</geoapi.version>
+    <geoapi.version>4.0-SNAPSHOT</geoapi.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <website.encoding>UTF-8</website.encoding>
     <maven.compiler.release>8</maven.compiler.release>
