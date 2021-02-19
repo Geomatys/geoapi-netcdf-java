@@ -79,11 +79,6 @@
       <version>4.6.15</version>
     </dependency>
     <dependency>
-      <groupId>javax.vecmath</groupId>
-      <artifactId>vecmath</artifactId>
-      <version>1.5.2</version>
-    </dependency>
-    <dependency>
       <groupId>org.opengis</groupId>
       <artifactId>geoapi-conformance</artifactId>
       <version>${geoapi.version}</version>
@@ -183,7 +178,7 @@
           <keywords>true</keywords>
           <breakiterator>true</breakiterator>
           <additionalOptions>
-            -html5 -Xdoclint:syntax --add-stylesheet "${basedir}/src/main/javadoc/geoapi.css"
+            -Xdoclint:all --add-stylesheet "${basedir}/src/main/javadoc/geoapi.css"
           </additionalOptions>
           <tags>
             <tag>

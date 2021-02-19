@@ -68,12 +68,16 @@ public abstract class Wrapper {
 
     /**
      * Creates a new Coordinate Reference System wrapping the given netCDF coordinate system.
-     * The returned object may implement any of the {@link ProjectedCRS}, {@link GeographicCRS}
-     * {@link VerticalCRS} or {@link TemporalCRS}, depending on the {@linkplain AxisType axis types}.
+     * The returned object may implement any of the
+     * {@link org.opengis.referencing.crs.ProjectedCRS},
+     * {@link org.opengis.referencing.crs.GeographicCRS}
+     * {@link org.opengis.referencing.crs.VerticalCRS} or
+     * {@link org.opengis.referencing.crs.TemporalCRS},
+     * depending on the {@linkplain ucar.nc2.constants.AxisType axis types}.
      * If the netCDF object contains axes of unknown type, then the returned CRS will not implement
      * any of the above-cited interfaces. If the netCDF object contains different kind of CRS,
-     * then the returned CRS will be an instance of {@link CompoundCRS} in which each component
-     * implements one of the above-cited interfaces.
+     * then the returned CRS will be an instance of {@link org.opengis.referencing.crs.CompoundCRS}
+     * in which each component implements one of the above-cited interfaces.
      *
      * <h4>Axis order</h4>
      * The order of axes in the returned CRS is reversed compared to the order of axes in the wrapped
@@ -99,7 +103,8 @@ public abstract class Wrapper {
      *
      * @param  netcdfCS  the netCDF coordinate system to wrap, or {@code null} if none.
      * @return a wrapper for the given object, or {@code null} if the argument was null.
-     * @throws ClassCastException if at least one axis is not an instance of the {@link CoordinateAxis1D} subclass.
+     * @throws ClassCastException if at least one axis is not an instance of the
+     *         {@link ucar.nc2.dataset.CoordinateAxis1D} subclass.
      */
     public static CoordinateReferenceSystem wrap(final CoordinateSystem netcdfCS) {
         return NetcdfCRS.wrap(netcdfCS, netcdfCS.getNetcdfDataset(), Logger.getLogger("ucar.geoapi"));

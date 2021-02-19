@@ -6,28 +6,44 @@
  */
 package ucar.geoapi;
 
-import javax.vecmath.GMatrix;
 import org.opengis.referencing.operation.Matrix;
+import ucar.ma2.MAMatrix;
 
 
 /**
- * A {@link Matrix} built on top of Java3D {@code vecmath} library.
+ * A {@link Matrix} built on top of UCAR library.
  *
  * @author  Martin Desruisseaux (Geomatys)
  */
-final class SimpleMatrix extends GMatrix implements Matrix {
-    /**
-     * For cross-version compatibility.
-     */
-    private static final long serialVersionUID = -9053188309751616226L;
-
+final class SimpleMatrix extends MAMatrix implements Matrix {
     /**
      * Creates a matrix of size {@code size}&nbsp;×&nbsp;{@code size}.
      * Elements on the diagonal (<var>j</var> == <var>i</var>) are set to 1.
      */
-    public SimpleMatrix(final int size) {
+    SimpleMatrix(final int size) {
         super(size, size);
+        for (int i=0; i<size; i++) {
+            setDouble(i, i, 1);
+        }
     }
+
+    /**
+     * Creates a copy of given matrix.
+     */
+    private SimpleMatrix(final MAMatrix other) {
+        super(other.getNrows(), other.getNcols());
+        for (int j=0; j<getNrows(); j++) {
+            for (int i=0; i<getNcols(); i++) {
+                setDouble(j, i, other.getDouble(j, i));
+            }
+        }
+    }
+
+    /** Returns matrix size. */
+    @Override public int    getNumRow() {return getNrows();}
+    @Override public int    getNumCol() {return getNcols();}
+    @Override public double getElement(int row, int col) {return getDouble(row, col);}
+    @Override public void   setElement(int row, int col, double v) {setDouble(row, col, v);}
 
     /**
      * Returns {@code true} if this matrix is an identity matrix.
@@ -54,6 +70,6 @@ final class SimpleMatrix extends GMatrix implements Matrix {
      */
     @Override
     public SimpleMatrix clone() {
-        return (SimpleMatrix) super.clone();
+        return new SimpleMatrix(this);
     }
 }
